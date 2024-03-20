@@ -34,7 +34,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::mat bigtemp = arma::zeros(Next,Mext);
   bigtemp.submat(0,0,N-1,M-1) = arma::ones(N,M);
-  arma::uvec uind = arma::find(bigtemp);
+  arma::uvec uind = arma::find(arma::vectorise(bigtemp));
 
   //std::cout << "Checkpoint 1" << std::endl;
 

@@ -16,3 +16,5 @@ LinkingTo:
 Imports: 
     Rcpp,
     RcppArmadillo
+URL: https://github.com/SumanM47/DimProj
+BugReports: https://github.com/SumanM47/DimProj/issues
