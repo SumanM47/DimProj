@@ -241,7 +241,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           arma::vec tempU = arma::vectorise(bigU.slice(kind));
           double tempdA = 0.0;
           for(int iind=0;iind<I;iind++){
-            tempdA += arma::sum(tempU%bigres.tube(iind,jind))/sig2(iind,jind);
+            arma::vec nbigtemp = bigres.tube(iind,jind);
+            tempdA += arma::sum(tempU%nbigtemp)/sig2(iind,jind);
           }
           curgrad_aj(kind) = -(A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
         }
@@ -280,7 +281,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           arma::vec tempU = arma::vectorise(bigU.slice(kind));
           double tempdA = 0.0;
           for(int iind=0;iind<I;iind++){
-            tempdA += arma::sum(tempU%canbigres.tube(iind,jind))/sig2(iind,jind);
+            arma::vec nbigtemp = canbigres.tube(iind,jind);
+            tempdA += arma::sum(tempU%nbigtemp)/sig2(iind,jind);
           }
           cangrad_aj(kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
         }
