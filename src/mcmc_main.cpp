@@ -143,7 +143,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   nHessinv_sig2 = 1/(1/sigsig2 + 0.5*quad/sig2);
 
   //arma::vec dUtU = arma::sum(arma::pow(U,2),0).t();
-  arma::vec dUtU = arma::sum(arma::sum(arma::pow(bigU,2),0),0).t();
+  arma::vec dUtU = arma::zeros(K);
+  for(int kind=0;kind<K;kind++){
+    dUtU(kind) = arma::accu(arma::pow(bigU.slice(kind),2));
+  }
   for(int jind=0;jind<J;jind++){
     nHessinv_A.col(jind) = 1/(1/sig2A + (arma::sum(1/(sig2.col(jind)))*dUtU));
     }
@@ -234,10 +237,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         //subres_col = res(arma::span::all,arma::span(jind),arma::span::all);
         //curgrad_aj = -(A.row(jind).t() - A0.row(jind).t())/sig2A + arma::sum((U.t()*subres_col.t())*arma::diagmat(1/sig2.col(jind)),1);
-        for(kind=0;kind<K;kind++){
-          arma::vec tempU = vectorise(bigU.slice(k));
+        for(int kind=0;kind<K;kind++){
+          arma::vec tempU = arma::vectorise(bigU.slice(kind));
           double tempdA = 0.0;
-          for(iind=0;iind<I;iind++){
+          for(int iind=0;iind<I;iind++){
             tempdA += arma::sum(tempU%bigres.tube(iind,jind))/sig2(iind,jind);
           }
           curgrad_aj(kind) = -(A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
@@ -263,20 +266,20 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //}
 
         arma::vec bigUa = arma::zeros(Next,Mext);
-        for(kind=0;kind<K;kind++){
+        for(int kind=0;kind<K;kind++){
           bigUa += bigU.slice(kind)*(A(jind,kind) - can_A(jind,kind));
         }
-        for(iind=0;iind<I;iind++){
+        for(int iind=0;iind<I;iind++){
           canbigres.tube(iind,jind) += arma::vectorise(bigUa);
         }
         canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
         //subres_col = canres(arma::span::all,arma::span(jind),arma::span::all);
         //cangrad_aj = -(can_A.row(jind).t() - A0.row(jind).t())/sig2A + arma::sum((U.t()*subres_col.t())*arma::diagmat(1/sig2.col(jind)),1);
-        for(kind=0;kind<K;kind++){
-          arma::vec tempU = vectorise(bigU.slice(kind));
+        for(int kind=0;kind<K;kind++){
+          arma::vec tempU = arma::vectorise(bigU.slice(kind));
           double tempdA = 0.0;
-          for(iind=0;iind<I;iind++){
+          for(int iind=0;iind<I;iind++){
             tempdA += arma::sum(tempU%canbigres.tube(iind,jind))/sig2(iind,jind);
           }
           cangrad_aj(kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
