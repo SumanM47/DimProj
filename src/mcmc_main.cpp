@@ -98,7 +98,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       tempres2 = Y(arma::span(iind),arma::span(jind),arma::span::all);
       tempres3 = tempres2 - tempres;
       res.tube(iind,jind) = tempres3;
-      bigres.tube(iind,jind) = sqrt(sig2(iind,jind))*arma::randn(nbig);
+      bigres.tube(iind,jind) = arma::zeros(nbig);
       quad(iind,jind) = arma::sum(tempres3%tempres3);
     }
   }
