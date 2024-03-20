@@ -116,7 +116,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   // Gradients and candidates
   arma::vec curgrad_mu = arma::zeros(J), cangrad_mu =  arma::zeros(J), can_mu = mu;
-  arma::vec curgrad_aj = arma::zeros(J), cangrad_aj =  arma::zeros(J), tempA = arma::zeros(K);
+  arma::vec curgrad_aj = arma::zeros(K), cangrad_aj =  arma::zeros(K), tempA = arma::zeros(K);
   arma::mat can_A = A;
   double can_rho = 0;
   arma::mat curgrad_sig2 = arma::zeros(I,J), cangrad_sig2 =  arma::zeros(I,J), can_sig2 = sig2;
@@ -247,11 +247,12 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           curgrad_aj(kind) = -(A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
         }
 
+        //std::cout<<"Checkpoint 4.1"<< std::endl;
 
         can_A = A;
         //canres = res;
         //canquad = quad;
-        canbigres = res;
+        canbigres = bigres;
         canbigquad = bigquad;
 
         tempA = A.row(jind).t() + 0.5*h_A(jind)*(nHessinv_A.col(jind)%curgrad_aj) + sqrt(h_A(jind))*(arma::sqrt(nHessinv_A.col(jind))%arma::randn(K));
@@ -286,6 +287,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           }
           cangrad_aj(kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA;
         }
+
+        //std::cout<<"Checkpoint 4.2"<< std::endl;
 
         qprop = -0.5*arma::sum(arma::pow((can_A.row(jind).t() - A.row(jind).t() - 0.5*h_A(jind)*(nHessinv_A.col(jind)%curgrad_aj)),2)/nHessinv_A.col(jind))/h_A(jind);
         qcur = -0.5*arma::sum(arma::pow((A.row(jind).t() - can_A.row(jind).t() - 0.5*h_A(jind)*(nHessinv_A.col(jind)%cangrad_aj)),2)/nHessinv_A.col(jind))/h_A(jind);
