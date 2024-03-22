@@ -83,9 +83,9 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     U.col(kind) = arma::vectorise(bigU.slice(kind).submat(0,0,N-1,M-1));
     tempfftbigU = arma::fft2(bigU.slice(kind));
     tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
-    bigUquad(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf));
+    bigUquad(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
     tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU2;
-    diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf));
+    diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
     bigUgradpart.slice(kind) = arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU));
   }
 
@@ -128,8 +128,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   // Initiating and calculating the inverse Hessian matrices
   // diagonal Hessian matrices turned to vectors
   // block diagonal matrices made into cube to use each slice independently
-  arma::vec nHessinv_mu = arma::ones(J), nHessinv_U= arma::ones(K);
+  //arma::vec nHessinv_mu = arma::ones(J), nHessinv_U= arma::ones(K);
+  arma::vec nHessinv_mu = arma::ones(J);
   arma::mat nHessinv_A = arma::ones(K,J), nHessinv_sig2 = arma::ones(I,J);
+  arma::cube nHessinv_U = arma::ones(Next,Mext,K);
 
   double qprop, qcur, la, cancs, canlogdets, canbigUquad;
   arma::mat canquad = quad, canSigCube = SigCube.slice(0), canbigUgradpart = bigUgradpart.slice(0), canU = U;
@@ -159,9 +161,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     for(int iind=0; iind<I; iind++){
       tempscalebigU += arma::sum(arma::pow(A.col(kind),2)/sig2.row(iind).t());
     }
-    nHessinv_U(kind) = 1/(diaginv(kind)/cs(kind) + tempscalebigU);
+    nHessinv_U.slice(kind) = (cs(kind)/diaginv(kind))*arma::ones(Next,Mext);
+    nHessinv_U.slice(kind).submat(0,0,N-1,M-1) = (1/(diaginv(kind)/cs(kind) + tempscalebigU))*arma::ones(N,M);
   }
-  nHessinv_U = arma::ones(K);
+  //nHessinv_U = arma::ones(K);
 
   //std::cout << "done with Hessians" << std::endl;
   // Storage
@@ -169,13 +172,14 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube keep_A = arma::zeros(niters,J,K);
   arma::mat keep_rho = arma::zeros(niters,K);
   arma::cube keep_sig2 = arma::zeros(niters,I,J);
+  arma::vec acc_U = arma::zeros(K);
 
   // proposal variances
   double h_mu = 2.7225/pow(J,0.33);
-  arma::vec h_A = (5.6644/(K))*arma::ones(J);
-  arma::vec h_rho = 0.4*(5.6644)*arma::ones(K);
+  arma::vec h_A = (5.6644/(J*K))*arma::ones(J);
+  arma::vec h_rho = 0.4*(5.6644/K)*arma::ones(K);
   double h_sig2 = (5.6644/(I*J));
-  arma::vec h_bigU = (2.7225/pow(nbig,0.33))*arma::ones(K);
+  arma::vec h_bigU = (2.7225/(K*pow(nbig,0.33)))*arma::ones(K);
 
   //std::cout << "Checkpoint 3" << std::endl;
 
@@ -325,7 +329,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       // Update rho
 
       for(int kind=0;kind<K;kind++){
-        curlik_rho = -0.5*pow(log(rho(kind)/rho0(kind)),2)/sig2rho - 0.5*n*log(cs(kind)) - 0.5*logdets(kind) - 0.5*bigUquad(kind);
+        curlik_rho = -0.5*pow(log(rho(kind)/rho0(kind)),2)/sig2rho - 0.5*nbig*log(cs(kind)) - 0.5*logdets(kind) - 0.5*bigUquad(kind);
 
         can_rho = exp(log(rho(kind)) + sqrt(h_rho(kind))*arma::randn());
 
@@ -337,10 +341,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         canlogdets = arma::accu(arma::log(arma::real(tempSigeig)));
         tempfftbigU = arma::fft2(bigU.slice(kind));
         tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
-        canbigUquad = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf));
+        canbigUquad = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
         canbigUgradpart = arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU));
 
-        canlik_rho = -0.5*pow(log(can_rho/rho0(kind)),2)/sig2rho - 0.5*n*log(cancs) - 0.5*canlogdets - 0.5*canbigUquad;
+        canlik_rho = -0.5*pow(log(can_rho/rho0(kind)),2)/sig2rho - 0.5*nbig*log(cancs) - 0.5*canlogdets - 0.5*canbigUquad;
 
         la = canlik_rho - curlik_rho;
         if(log(arma::randu()) < la){
@@ -410,12 +414,13 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         //std::cout << "Checkpoint 8.1" << std::endl;
 
-        can_bigU.slice(kind) = bigU.slice(kind) + 0.5*h_bigU(kind)*nHessinv_U(kind)*curgrad_bigU + sqrt(h_bigU(kind)*nHessinv_U(kind))*arma::randn(Next,Mext);
+        //can_bigU.slice(kind) = bigU.slice(kind) + 0.5*h_bigU(kind)*nHessinv_U(kind)*curgrad_bigU + sqrt(h_bigU(kind)*nHessinv_U(kind))*arma::randn(Next,Mext);
+        can_bigU.slice(kind) = bigU.slice(kind) + 0.5*h_bigU(kind)*(nHessinv_U.slice(kind)%curgrad_bigU) + sqrt(h_bigU(kind))*(arma::sqrt(nHessinv_U.slice(kind))%arma::randn(Next,Mext));
 
         tempSigeig = arma::fft2(SigCube.slice(kind));
         tempfftbigU = arma::fft2(can_bigU.slice(kind));
         tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
-        canbigUquad = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf));
+        canbigUquad = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
         canbigUgradpart = arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU));
 
         canU.col(kind) = arma::vectorise(can_bigU.slice(kind).submat(0,0,N-1,M-1));
@@ -458,11 +463,13 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //tempgradpartbigUnew = arma::reshape(tempgradpartU.t(),Next,Mext);
         cangrad_bigU= -canbigUgradpart/cs(kind) + tempgradpartbigUnew;
 
-        qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind) - bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*curgrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
-        qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind) - can_bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*cangrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
+        //qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind) - bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*curgrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
+        //qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind) - can_bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*cangrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
 
-        //qprop = - arma::accu(arma::pow(can_bigU - bigU.slice(kind) - 0.5*h_bigU(kind)*(1/(tempscalebigU + (1/cs(kind))))*curgrad_bigU,2))/(2*h_bigU(kind)*(tempscalebigU + (1/cs(kind))));
-        //qcur = - arma::accu(arma::pow(bigU.slice(kind) - can_bigU - 0.5*h_bigU(kind)*(tempscalebigU + (1/cs(kind)))*cangrad_bigU,2))/(2*h_bigU(kind)*(tempscalebigU + (1/cs(kind))));
+        qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind) - bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U.slice(kind)%curgrad_bigU),2)/nHessinv_U.slice(kind))/h_bigU(kind);
+        qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind) - can_bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U.slice(kind)%cangrad_bigU),2)/nHessinv_U.slice(kind))/h_bigU(kind);
+
+
 
         //std::cout << "Checkpoint 8.4" << std::endl;
 
@@ -476,6 +483,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           //bigquad = canbigquad;
           bigUquad(kind) = canbigUquad;
           bigUgradpart.slice(kind) = canbigUgradpart;
+          acc_U(kind) += 1.0/(niters*nthin);
         }
         //bigres.slices(uind) = res;
 
@@ -499,6 +507,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
                       Named("A") = keep_A,
                       Named("rho") = keep_rho,
                       Named("sigma2") = keep_sig2,
+                      Named("acc_U") = acc_U,
                       Named("niters") = niters,
                       Named("nthin") = nthin,
                       Named("nburn") = nburn);
