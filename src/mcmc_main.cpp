@@ -55,6 +55,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::cube SigCube(Next,Mext,K);
 
+  //std::cout << "Checkpoint 1.1" << std::endl;
+
   // Computing the scale terms
   for(int kind=0;kind<K;kind++){
     temp1 = rho(kind);
@@ -71,10 +73,12 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::cube bigU = arma::zeros(nbig,I,K);
   arma::cube bigUstar = bigU;
-  arma::vec bigUquad = arma::zeros(I,K);
+  arma::mat bigUquad = arma::zeros(I,K);
   arma::cube bigUgradpart = arma::zeros(nbig,I,K);
   arma::vec logdets = arma::zeros(K);
   arma::mat tempbigU = arma::zeros(Next,Mext);
+
+  //std::cout << "Checkpoint 1.2" << std::endl;
 
   for(int kind=0; kind<K; kind++){
     tempSigeig = arma::fft2(SigCube.slice(kind));
@@ -82,19 +86,19 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     for(int iii=0; iii<I; iii++){
     tempnorm = arma::randn(Next,Mext);
     tempbigU = arma::real(arma::ifft2(arma::sqrt(tempSigeig)%arma::fft2(tempnorm)));
-    U.subcube(0,n-1,iii,iii,kind,kind) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
+    U.slice(kind).col(iii) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
     tempfftbigU = arma::fft2(tempbigU);
     tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
     bigUquad(iii,kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
     tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU2;
     diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
-    bigUgradpart.subcube(0,nbig-1,iii,iii,kind,kind) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU))).t();
-    bigU.subcube(0,nbig-1,iii,iii,kind,kind) = arma::vectorise(tempbigU).t();
+    bigUgradpart.slice(kind).col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
+    bigU.slice(kind).col(iii) = arma::vectorise(tempbigU);
     }
     bigUstar.slice(kind) = bigU.slice(kind)*arma::chol(arma::toeplitz(Cs.col(kind)));
   }
 
-  // Updated till here
+  //std::cout << "Checkpoint 1.3" << std::endl;
 
   // Computing intermediary terms
   arma::vec tempres = arma::zeros(n);
@@ -131,6 +135,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::vec canCs = arma::zeros(I);
   arma::mat curgrad_sig2 = arma::zeros(I,J), cangrad_sig2 =  arma::zeros(I,J), can_sig2 = sig2;
 
+  //std::cout << "Checkpoint 2.1" << std::endl;
+
   arma::mat curgrad_bigU = arma::zeros(Next,Mext), cangrad_bigU = arma::zeros(Next,Mext);
   //arma::mat subres_row = arma::zeros(J,n), subres_col= arma::zeros(I,n), subres_slice= arma::zeros(I,J);
   arma::mat subres_row = arma::zeros(J,nbig), subres_col= arma::zeros(I,nbig), subres_slice= arma::zeros(I,J);
@@ -145,12 +151,16 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube nHessinv_U = arma::ones(nbig,I,K);
   //arma::cube arma::mat nHessinv_A = arma::ones(K,K,J), nHessinv_U = arma::ones(Next,Mext,K);
 
+  //std::cout << "Checkpoint 2.2" << std::endl;
+
   double qprop, qcur, la, canlogdets;
   arma::vec canbigUquad = arma::zeros(I);
   //arma::mat canquad = quad, canSigCube = SigCube.slice(0), canbigUgradpart = bigUgradpart.slice(0), canU = U;
-  arma::mat canSigCube = SigCube.slice(0), canbigUgradpart = bigUgradpart.slice(0), canU = U, canbigquad=bigquad;
+  arma::mat canSigCube = SigCube.slice(0), canbigUgradpart = bigUgradpart.slice(0), canbigquad=bigquad;
   //arma::cube canres = res, can_bigU = bigU;
   arma::cube canbigres = bigres, can_bigU = bigU, canbigUstar = bigUstar;
+
+  //std::cout << "Checkpoint 2.3" << std::endl;
 
   for(int jind=0;jind<J;jind++){
     //nHessinv_mu(jind) = 1/((1/sig2mu) + n*bma*bma*arma::sum(1/(sig2.col(jind))));
@@ -160,11 +170,13 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   //nHessinv_sig2 = 1/(1/sigsig2 + 0.5*quad/sig2);
   nHessinv_sig2 = 1/(1/sigsig2 + 0.5*bigquad/sig2);
 
+  //std::cout << "Checkpoint 2.4" << std::endl;
+
   //arma::vec dUtU = arma::sum(arma::pow(U,2),0).t();
   //arma::vec dUtU = arma::zeros(K);
   //arma::mat dUtU = arma::zeros(K,K);
   arma::mat dUtU = arma::zeros(K,I);
-  arma::rowvec tempHessA = arma::zeros(K,1);
+  arma::vec tempHessA = arma::zeros(K);
   //for(int kind=0;kind<K;kind++){
     //dUtU(kind) = arma::accu(arma::pow(bigUstar.slice(kind),2));
   //}
@@ -176,8 +188,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       for(int iind=0;iind<I;iind++){
         tempHessA += dUtU.col(iind)/sig2(iind,jind);
       }
-      nHessinv_A.col(jind) = 1/(1/sig2A + tempHessA.t());
+      nHessinv_A.col(jind) = 1/(1/sig2A + tempHessA);
     }
+
+  //std::cout << "Checkpoint 2.5" << std::endl;
 
   for(int kind=0;kind<K;kind++){
     //double tempscalebigU = 0;
@@ -372,7 +386,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         tempfftbigU = arma::fft2(arma::reshape(bigU.slice(kind).col(iii),Next,Mext));
         tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
         canbigUquad(iii) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
-        canbigUgradpart.col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU))).t();
+        canbigUgradpart.col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
         }
         canbigUstar.slice(kind) = bigU.slice(kind)*arma::chol(arma::toeplitz(canCs));
         for(int iind=0; iind<I; iind++){
