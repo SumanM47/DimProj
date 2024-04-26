@@ -55,7 +55,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::cube SigCube(Next,Mext,K);
 
-  arma::mat Cmat = arma::zeros(K,K), Cmatchol = arma::zeros(K,K);
+  arma::mat Cmat = arma::zeros(I,I), Cmatchol = arma::zeros(I,I);
 
 
   //std::cout << "Checkpoint 1.1" << std::endl;
@@ -397,7 +397,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         while(cholsuc == false){
           cholsuc = arma::chol(Cmatchol,Cmat);
           if(cholsuc == false){
-            Cmat += arma::eye(K,K)*1e-6;
+            Cmat += arma::eye(I,I)*1e-6;
           }
         }
 
