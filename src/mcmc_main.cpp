@@ -55,6 +55,9 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::cube SigCube(Next,Mext,K);
 
+  arma::mat Cmat = arma::zeros(K,K), Cmatchol = arma::zeros(K,K);
+
+
   //std::cout << "Checkpoint 1.1" << std::endl;
 
   // Computing the scale terms
@@ -307,12 +310,12 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         //tempres = mu(jind)*bma + U*(can_A.row(jind).t());
         //tempres = mu(jind)*bma + U*(tempA.t());
-        for(int iind=0;iind<I;iind++){
+        //for(int iind=0;iind<I;iind++){
           //tempres2 = Y(arma::span(iind),arma::span(jind),arma::span::all);
           //tempres3 = tempres2 - tempres;
           //canres.tube(iind,jind) = tempres3;
           //canquad(iind,jind) = arma::sum(tempres3%tempres3);
-        }
+        //}
 
         arma::mat bigUa = arma::zeros(nbig,I);
         for(int kind=0;kind<K;kind++){
@@ -388,7 +391,17 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         canbigUquad(iii) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
         canbigUgradpart.col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
         }
-        canbigUstar.slice(kind) = bigU.slice(kind)*arma::chol(arma::toeplitz(canCs));
+
+        bool cholsuc = false;
+        Cmat = arma::toeplitz(canCs);
+        while(cholsuc == false){
+          cholsuc = arma::chol(Cmatchol,Cmat);
+          if(cholsuc == false){
+            Cmat += arma::eye(K,K)*1e-6;
+          }
+        }
+
+        canbigUstar.slice(kind) = bigU.slice(kind)*Cmatchol;
         for(int iind=0; iind<I; iind++){
           for(int jind=0; jind<J; jind++){
             canbigres.tube(iind,jind) += (bigUstar.col_as_mat(iind) - canbigUstar.col_as_mat(iind))*(A.row(jind).t());
