@@ -55,17 +55,16 @@ Slice_to_3D <- function(data,K,
   BAs <- as.logical(prod(dim(inits$A) == c(J,K)))
   Bsig2 <- is.numeric(inits$sig2)
   Bsig2x <- as.logical(prod(inits$sig2 > 0))
-  Bsig2s1 <- nrow(inits$sig2) == I
-  Bsig2s2 <- ncol(inits$sig2) == J
-  B <- as.logical(Bmu*Bmus*Brho*Brhos*BA*BAs*Bsig2*Bsig2x*Bsig2s1*Bsig2s2)
+  Bsig2s2 <- length(inits$sig2) == J
+  B <- as.logical(Bmu*Bmus*Brho*Brhos*BA*BAs*Bsig2*Bsig2x*Bsig2s2)
   AB <- as.logical(A+!B)
   if(AB){
     mu_init <- apply(Y,2,"mean",na.rm=T)
 
-    VY <- apply(Y,1:2,"var",na.rm=T)
+    VY <- colMeans(apply(Y,1:2,"var",na.rm=T))
     sig2_init <- 0.1*VY
 
-    A_init <- matrix(sqrt(0.9*colMeans(VY,na.rm=T)/3),J,K)
+    A_init <- matrix(sqrt(0.9*VY/3),J,K)
     dmax <- sqrt(max(S[,1]-S[1,1])^2 + max(S[,2] - S[1,2])^2)
     rho_init <- rep(0.1*dmax,K)
   } else{

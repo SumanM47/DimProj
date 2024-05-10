@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // Slicesto3D
-List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N, arma::vec mu_init, arma::vec rho_init, arma::mat A_init, arma::mat sig2_init, int niters, int nburn, int nthin, arma::vec mu0, arma::vec rho0, arma::mat A0, double musig2, double sigsig2, double sig2mu, double sig2rho, double sig2A);
+List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N, arma::vec mu_init, arma::vec rho_init, arma::mat A_init, arma::vec sig2_init, int niters, int nburn, int nthin, arma::vec mu0, arma::vec rho0, arma::mat A0, double musig2, double sigsig2, double sig2mu, double sig2rho, double sig2A);
 RcppExport SEXP _DimProj_Slicesto3D(SEXP YSEXP, SEXP SSEXP, SEXP bmaSEXP, SEXP MSEXP, SEXP NSEXP, SEXP mu_initSEXP, SEXP rho_initSEXP, SEXP A_initSEXP, SEXP sig2_initSEXP, SEXP nitersSEXP, SEXP nburnSEXP, SEXP nthinSEXP, SEXP mu0SEXP, SEXP rho0SEXP, SEXP A0SEXP, SEXP musig2SEXP, SEXP sigsig2SEXP, SEXP sig2muSEXP, SEXP sig2rhoSEXP, SEXP sig2ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -25,7 +25,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type mu_init(mu_initSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type rho_init(rho_initSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type A_init(A_initSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type sig2_init(sig2_initSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sig2_init(sig2_initSEXP);
     Rcpp::traits::input_parameter< int >::type niters(nitersSEXP);
     Rcpp::traits::input_parameter< int >::type nburn(nburnSEXP);
     Rcpp::traits::input_parameter< int >::type nthin(nthinSEXP);
