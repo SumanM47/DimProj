@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
                 arma::vec mu_init, arma::vec rho_init, arma::mat A_init, arma::vec sig2_init,
-                int niters, int nburn, int nthin,
+                int niters, int nburn, int nthin, int adapt,
                 arma::vec mu0, arma::vec rho0, arma::mat A0, double musig2, double sigsig2,
                 double sig2mu, double sig2rho, double sig2A){
 
@@ -109,7 +109,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::mat bigUstari = arma::zeros(nbig,K), bigUstark = arma::zeros(nbig,I), Ustari = arma::zeros(n,K);
 
   for(int iind=0;iind<I;iind++){
-    bigUstari = bigUstar.col(iind);
+    bigUstari = bigUstar.col_as_mat(iind);
     Ustari = bigUstari.rows(uind);
   for(int jind=0;jind<J;jind++){
     tempres = mu(jind)*bma + Ustari*A.row(jind).t();
@@ -218,13 +218,17 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::mat keep_rho = arma::zeros(niters,K);
   arma::mat keep_sig2 = arma::zeros(niters,J);
   arma::mat acc_U = arma::zeros(I,K);
+    double acc_mu = 0.0;
+    arma::vec acc_A = arma::zeros(J);
+    arma::vec acc_rho = arma::zeros(K);
+    double acc_sig2 = 0.0;
 
   // proposal variances
   double h_mu = 2.7225/pow(J,0.33);
   arma::vec h_A = (5.6644/(K))*arma::ones(J);
   arma::vec h_rho = 0.4*(5.6644)*arma::ones(K);
   double h_sig2 = (5.6644/(J));
-  arma::vec h_bigU = (2.7225/(K*pow(nbig*I,0.33)))*arma::ones(K);
+  arma::mat h_bigU = (2.7225/(K*pow(nbig*I,0.33)))*arma::ones(I,K);
 
   //std::cout << "Checkpoint 3" << std::endl;
 
@@ -274,6 +278,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //quad = canquad;
         bigres=canbigres;
         bigquad=canbigquad;
+        acc_mu += 1.0;
       }
 
       //std::cout << "Checkpoint 4" << std::endl;
@@ -365,6 +370,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //quad = canquad;
         bigres = canbigres;
         bigquad = canbigquad;
+        acc_A(jind) += 1.0;
       }
       //bigres.slices(uind) = res;
       }
@@ -400,6 +406,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           cholsuc = arma::chol(Cmatchol,Cmat);
           if(cholsuc == false){
             Cmat += arma::eye(I,I)*1e-6;
+            canCs[0] += 1e-6;
           }
         }
 
@@ -423,6 +430,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           bigUgradpart.slice(kind) = canbigUgradpart;
           bigres=canbigres;
           bigquad=canbigquad;
+          acc_rho(kind) += 1.0;
         }
 
       }
@@ -450,6 +458,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       la = canlik_sig2 + qcur - curlik_sig2 - qprop;
       if(log(arma::randu()) < la){
         sig2 = can_sig2;
+        acc_sig2 += 1.0;
       }
 
       //std::cout << "Checkpoint 7" << std::endl;
@@ -484,7 +493,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //std::cout << "Checkpoint 8.1" << std::endl;
 
         //can_bigU.slice(kind) = bigU.slice(kind) + 0.5*h_bigU(kind)*nHessinv_U(kind)*curgrad_bigU + sqrt(h_bigU(kind)*nHessinv_U(kind))*arma::randn(Next,Mext);
-        can_bigU.slice(kind).col(iind) = bigU.slice(kind).col(iind) + 0.5*h_bigU(kind)*(nHessinv_U(kind)*curgrad_bigU) + sqrt(h_bigU(kind))*(sqrt(nHessinv_U(kind))*arma::randn(nbig,1));
+        can_bigU.slice(kind).col(iind) = bigU.slice(kind).col(iind) + 0.5*h_bigU(iind,kind)*(nHessinv_U(kind)*curgrad_bigU) + sqrt(h_bigU(iind,kind))*(sqrt(nHessinv_U(kind))*arma::randn(nbig,1));
 
         tempSigeig = arma::fft2(SigCube.slice(kind));
         tempfftbigU = arma::fft2(arma::reshape(can_bigU.slice(kind).col(iind),Next,Mext));
@@ -540,8 +549,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind) - bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*curgrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
         //qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind) - can_bigU.slice(kind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*cangrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
 
-        qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind).col(iind) - bigU.slice(kind).col(iind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*curgrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
-        qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind).col(iind) - can_bigU.slice(kind).col(iind) - 0.5*h_bigU(kind)*(nHessinv_U(kind)*cangrad_bigU),2)/nHessinv_U(kind))/h_bigU(kind);
+        qprop = -0.5*arma::accu(arma::pow(can_bigU.slice(kind).col(iind) - bigU.slice(kind).col(iind) - 0.5*h_bigU(iind,kind)*(nHessinv_U(kind)*curgrad_bigU),2)/nHessinv_U(kind))/h_bigU(iind,kind);
+        qcur = -0.5*arma::accu(arma::pow(bigU.slice(kind).col(iind) - can_bigU.slice(kind).col(iind) - 0.5*h_bigU(iind,kind)*(nHessinv_U(kind)*cangrad_bigU),2)/nHessinv_U(kind))/h_bigU(iind,kind);
 
 
 
@@ -557,7 +566,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           bigquad = canbigquad;
           bigUquad(iind,kind) = canbigUquad(iind);
           bigUgradpart.slice(kind).col(iind) = canbigUgradpart.col(iind);
-          acc_U(iind,kind) += 1.0/(niters*nthin);
+          acc_U(iind,kind) += 1.0;
         }
         //bigres.slices(uind) = res;
 
@@ -574,6 +583,18 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     keep_A.row(i) = A;
     keep_rho.row(i) = rho.t();
     keep_sig2.row(i) = sig2.t();
+
+    if(adapt!=0){
+      if(i < nburn/2){
+      double itr = (i+1)*nthin;
+      h_mu = h_mu*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
+      h_A = h_A%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
+      h_rho = h_rho%arma::exp(((acc_rho/itr) - 0.574)/sqrt(itr));
+      h_sig2 = h_sig2*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
+      h_bigU = h_bigU%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
+      }
+    }
+
   }
 
 

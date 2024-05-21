@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // Slicesto3D
-List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N, arma::vec mu_init, arma::vec rho_init, arma::mat A_init, arma::vec sig2_init, int niters, int nburn, int nthin, arma::vec mu0, arma::vec rho0, arma::mat A0, double musig2, double sigsig2, double sig2mu, double sig2rho, double sig2A);
-RcppExport SEXP _DimProj_Slicesto3D(SEXP YSEXP, SEXP SSEXP, SEXP bmaSEXP, SEXP MSEXP, SEXP NSEXP, SEXP mu_initSEXP, SEXP rho_initSEXP, SEXP A_initSEXP, SEXP sig2_initSEXP, SEXP nitersSEXP, SEXP nburnSEXP, SEXP nthinSEXP, SEXP mu0SEXP, SEXP rho0SEXP, SEXP A0SEXP, SEXP musig2SEXP, SEXP sigsig2SEXP, SEXP sig2muSEXP, SEXP sig2rhoSEXP, SEXP sig2ASEXP) {
+List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N, arma::vec mu_init, arma::vec rho_init, arma::mat A_init, arma::vec sig2_init, int niters, int nburn, int nthin, int adapt, arma::vec mu0, arma::vec rho0, arma::mat A0, double musig2, double sigsig2, double sig2mu, double sig2rho, double sig2A);
+RcppExport SEXP _DimProj_Slicesto3D(SEXP YSEXP, SEXP SSEXP, SEXP bmaSEXP, SEXP MSEXP, SEXP NSEXP, SEXP mu_initSEXP, SEXP rho_initSEXP, SEXP A_initSEXP, SEXP sig2_initSEXP, SEXP nitersSEXP, SEXP nburnSEXP, SEXP nthinSEXP, SEXP adaptSEXP, SEXP mu0SEXP, SEXP rho0SEXP, SEXP A0SEXP, SEXP musig2SEXP, SEXP sigsig2SEXP, SEXP sig2muSEXP, SEXP sig2rhoSEXP, SEXP sig2ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,6 +29,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type niters(nitersSEXP);
     Rcpp::traits::input_parameter< int >::type nburn(nburnSEXP);
     Rcpp::traits::input_parameter< int >::type nthin(nthinSEXP);
+    Rcpp::traits::input_parameter< int >::type adapt(adaptSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type mu0(mu0SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type rho0(rho0SEXP);
     Rcpp::traits::input_parameter< arma::mat >::type A0(A0SEXP);
@@ -37,13 +38,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type sig2mu(sig2muSEXP);
     Rcpp::traits::input_parameter< double >::type sig2rho(sig2rhoSEXP);
     Rcpp::traits::input_parameter< double >::type sig2A(sig2ASEXP);
-    rcpp_result_gen = Rcpp::wrap(Slicesto3D(Y, S, bma, M, N, mu_init, rho_init, A_init, sig2_init, niters, nburn, nthin, mu0, rho0, A0, musig2, sigsig2, sig2mu, sig2rho, sig2A));
+    rcpp_result_gen = Rcpp::wrap(Slicesto3D(Y, S, bma, M, N, mu_init, rho_init, A_init, sig2_init, niters, nburn, nthin, adapt, mu0, rho0, A0, musig2, sigsig2, sig2mu, sig2rho, sig2A));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_DimProj_Slicesto3D", (DL_FUNC) &_DimProj_Slicesto3D, 20},
+    {"_DimProj_Slicesto3D", (DL_FUNC) &_DimProj_Slicesto3D, 21},
     {NULL, NULL, 0}
 };
 
