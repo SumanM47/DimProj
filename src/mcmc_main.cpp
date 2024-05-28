@@ -226,9 +226,9 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   // proposal variances
   double h_mu = 2.7225/pow(J,0.33);
   arma::vec h_A = (5.6644/(K))*arma::ones(J);
-  arma::vec h_rho = 0.4*(5.6644)*arma::ones(K);
+  arma::vec h_rho = 0.4*(5.6644)*arma::ones(K)/(rho%rho);
   double h_sig2 = (5.6644/(J));
-  arma::mat h_bigU = (2.7225/(K*pow(nbig*I,0.33)))*arma::ones(I,K);
+  arma::mat h_bigU = (2.7225/pow(nbig,0.33))*arma::ones(I,K);
 
   //std::cout << "Checkpoint 3" << std::endl;
 
@@ -585,7 +585,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     keep_sig2.row(i) = sig2.t();
 
     if(adapt!=0){
-      if(i < nburn/2){
+      if(i < nburn){
       double itr = (i+1)*nthin;
       h_mu = h_mu*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
       h_A = h_A%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
@@ -598,13 +598,19 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   }
 
 
+  double eitr = niters*nthin;
+
   //std::cout << "Checkpoint 10" << std::endl;
 
   return List::create(Named("mu") = keep_mu,
                       Named("A") = keep_A,
                       Named("rho") = keep_rho,
                       Named("sigma2") = keep_sig2,
-                      Named("acc_U") = acc_U,
+                      Named("acc_U") = acc_U/eitr,
+                      Named("acc_mu") = acc_mu/eitr,
+                      Named("acc_A") = acc_A/eitr,
+                      Named("acc_rho") = acc_rho/eitr,
+                      Named("acc_sig2") = acc_sig2/eitr,
                       Named("niters") = niters,
                       Named("nthin") = nthin,
                       Named("nburn") = nburn);
