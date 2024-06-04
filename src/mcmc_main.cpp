@@ -226,7 +226,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   // proposal variances
   double h_mu = 2.7225/pow(J,0.33);
   arma::vec h_A = (5.6644/(K))*arma::ones(J);
-  arma::vec h_rho = 0.4*(5.6644)*arma::ones(K)/(rho%rho);
+  arma::vec h_rho = (5.6644/K)*arma::ones(K)/(rho%rho);
   double h_sig2 = (5.6644/(J));
   arma::mat h_bigU = (2.7225/pow(nbig,0.33))*arma::ones(I,K);
 
