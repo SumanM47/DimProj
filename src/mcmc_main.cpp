@@ -226,7 +226,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   // proposal variances
   double h_mu = 2.7225/pow(J,0.33);
   arma::vec h_A = (5.6644/(K))*arma::ones(J);
-  arma::vec h_rho = (5.6644/K)*arma::ones(K)/(rho%rho);
+  arma::vec h_rho = (5.6644)*arma::ones(K)/((rho%rho)*nbig*I);
   double h_sig2 = (5.6644/(J));
   arma::mat h_bigU = (2.7225/pow(nbig,0.33))*arma::ones(I,K);
 
@@ -589,7 +589,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       double itr = (i+1)*nthin;
       h_mu = h_mu*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
       h_A = h_A%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
-      h_rho = h_rho%arma::exp(((acc_rho/itr) - 0.574)/sqrt(itr));
+      h_rho = h_rho%arma::exp(((acc_rho/itr) - 0.23)/sqrt(itr));
       h_sig2 = h_sig2*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
       h_bigU = h_bigU%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
       }
