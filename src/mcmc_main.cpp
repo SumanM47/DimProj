@@ -224,11 +224,11 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     double acc_sig2 = 0.0;
 
   // proposal variances
-  double h_mu = 2.7225/pow(J,0.33);
-  arma::vec h_A = (5.6644/(K))*arma::ones(J);
-  arma::vec h_rho = (5.6644)*arma::ones(K)/((rho%rho)*nbig*I);
-  double h_sig2 = (5.6644/(J));
-  arma::mat h_bigU = (2.7225/pow(nbig,0.33))*arma::ones(I,K);
+  double h_mu0 = 2.7225/pow(J,0.33), h_mu = h_mu0;
+  arma::vec h_A0 = (5.6644/(K))*arma::ones(J), h_A = h_A0;
+  arma::vec h_rho0 = (5.6644)*arma::ones(K)/((rho%rho)*nbig*I), h_rho = h_rho0;
+  double h_sig20 = (5.6644/(J)), h_sig2 = h_sig20;
+  arma::mat h_bigU0 = (2.7225/pow(nbig,0.33))*arma::ones(I,K), h_bigU = h_bigU0;
 
   //std::cout << "Checkpoint 3" << std::endl;
 
@@ -587,11 +587,11 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     if(adapt!=0){
       if(i < nburn){
       double itr = (i+1)*nthin;
-      h_mu = h_mu*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
-      h_A = h_A%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
-      h_rho = h_rho%arma::exp(((acc_rho/itr) - 0.23)/sqrt(itr));
-      h_sig2 = h_sig2*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
-      h_bigU = h_bigU%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
+      h_mu = h_mu0*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
+      h_A = h_A0%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
+      h_rho = h_rho0%arma::exp(((acc_rho/itr) - 0.23)/sqrt(itr));
+      h_sig2 = h_sig20*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
+      h_bigU = h_bigU0%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
       }
     }
 
