@@ -278,7 +278,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //quad = canquad;
         bigres=canbigres;
         bigquad=canbigquad;
-        acc_mu += 1.0;
+        acc_mu += 1.0/nthin;
       }
 
       //std::cout << "Checkpoint 4" << std::endl;
@@ -370,7 +370,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //quad = canquad;
         bigres = canbigres;
         bigquad = canbigquad;
-        acc_A(jind) += 1.0;
+        acc_A(jind) += 1.0/nthin;
       }
       //bigres.slices(uind) = res;
       }
@@ -430,7 +430,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           bigUgradpart.slice(kind) = canbigUgradpart;
           bigres=canbigres;
           bigquad=canbigquad;
-          acc_rho(kind) += 1.0;
+          acc_rho(kind) += 1.0/nthin;
         }
 
       }
@@ -458,7 +458,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       la = canlik_sig2 + qcur - curlik_sig2 - qprop;
       if(log(arma::randu()) < la){
         sig2 = can_sig2;
-        acc_sig2 += 1.0;
+        acc_sig2 += 1.0/nthin;
       }
 
       //std::cout << "Checkpoint 7" << std::endl;
@@ -566,7 +566,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           bigquad = canbigquad;
           bigUquad(iind,kind) = canbigUquad(iind);
           bigUgradpart.slice(kind).col(iind) = canbigUgradpart.col(iind);
-          acc_U(iind,kind) += 1.0;
+          acc_U(iind,kind) += 1.0/nthin;
         }
         //bigres.slices(uind) = res;
 
@@ -585,13 +585,63 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     keep_sig2.row(i) = sig2.t();
 
     if(adapt!=0){
-      if(i < nburn){
-      double itr = (i+1)*nthin;
-      h_mu = h_mu0*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
-      h_A = h_A0%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
-      h_rho = h_rho0%arma::exp(((acc_rho/itr) - 0.23)/sqrt(itr));
-      h_sig2 = h_sig20*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
-      h_bigU = h_bigU0%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
+      if(i < nburn/2){
+      //double itr = (i+1)*nthin;
+      //h_mu = h_mu0*exp(((acc_mu/itr) - 0.574)/sqrt(itr));
+      //h_A = h_A0%arma::exp(((acc_A/itr) - 0.574)/sqrt(itr));
+      //h_rho = h_rho0%arma::exp(((acc_rho/itr) - 0.23)/sqrt(itr));
+      //h_sig2 = h_sig20*exp(((acc_sig2/itr) - 0.574)/sqrt(itr));
+      //h_bigU = h_bigU0%arma::exp(((acc_U/itr) - 0.574)/sqrt(itr));
+
+      if(acc_mu > 0.5){
+        h_mu = h_mu*1.2;
+      }
+      if(acc_mu < 0.3){
+        h_mu = h_mu*0.8;
+      }
+
+      for(int jind=0;jind<J;jind++){
+        if(acc_A(jind) > 0.5){
+          h_A(jind) = h_A(jind)*1.2;
+        }
+        if(acc_A(jind) < 0.3){
+          h_A(jind) = h_A(jind)*0.8;
+        }
+      }
+      for(int kind=0;kind<K;kind++){
+        if(acc_rho(kind) > 0.5){
+          h_rho(kind) = h_rho(kind)*1.2;
+        }
+        if(acc_rho(kind) < 0.3){
+          h_rho(kind) = h_rho(kind)*0.8;
+        }
+      }
+
+      if(acc_sig2 > 0.5){
+        h_sig2 = h_sig2*1.2;
+      }
+      if(acc_sig2 < 0.3){
+        h_sig2 = h_sig2*0.8;
+      }
+
+      for(int iind=0;iind<I;iind++){
+        for(int kind=0;kind<K;kind++){
+          if(acc_U(iind,kind) > 0.5){
+            h_bigU(iind,kind) = h_bigU(iind,kind)*1.2;
+          }
+          if(acc_U(iind,kind) < 0.3){
+            h_bigU(iind,kind) = h_bigU(iind,kind)*0.8;
+          }
+        }
+      }
+
+
+      acc_mu = 0.0;
+      acc_A = arma::zeros(J);
+      acc_rho = arma::zeros(K);
+      acc_sig2 = 0.0;
+      acc_U = arma::zeros(I,K);
+
       }
     }
 
