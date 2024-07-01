@@ -501,10 +501,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //canU = U;
         can_bigU = bigU;
         canbigres=bigres;
-        canbigquad=bigquad.col(kind);
+        canbigUquad=bigUquad.col(kind);
         canbigUstar = bigUstar;
         canbigUgradpart = bigUgradpart.slice(kind);
-        bigquad = canbigquad;
+        canbigquad = bigquad;
         //canres=res;
         //canquad=quad;
 
@@ -584,6 +584,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           bigquad = canbigquad;
           bigUquad(iind,kind) = canbigUquad(iind);
           bigUgradpart.slice(kind).col(iind) = canbigUgradpart.col(iind);
+          bigUstar = canbigUstar;
           acc_U(iind,kind) += 1.0/nthin;
         }
         //bigres.slices(uind) = res;
