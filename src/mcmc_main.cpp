@@ -403,8 +403,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         tempSigeig = arma::fft2(canSigCube);
         canlogdets = arma::accu(arma::log(arma::real(tempSigeig)));
 
-        canbigUquad = bigUquad;
-        canbigUgradpart = bigUgradpart;
+        canbigUquad = bigUquad.col(kind);
+        canbigUgradpart = bigUgradpart.slice(kind);
         canbigUstar = bigUstar;
         canbigres = bigres;
         canbigquad = bigquad;
@@ -501,9 +501,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         //canU = U;
         can_bigU = bigU;
         canbigres=bigres;
-        canbigquad=bigquad;
+        canbigquad=bigquad.col(kind);
         canbigUstar = bigUstar;
-        canbigUgradpart = bigUgradpart;
+        canbigUgradpart = bigUgradpart.slice(kind);
+        bigquad = canbigquad;
         //canres=res;
         //canquad=quad;
 
