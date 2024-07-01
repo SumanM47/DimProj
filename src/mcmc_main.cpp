@@ -218,17 +218,24 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::mat keep_rho = arma::zeros(niters,K);
   arma::mat keep_sig2 = arma::zeros(niters,J);
   arma::mat acc_U = arma::zeros(I,K);
-    double acc_mu = 0.0;
-    arma::vec acc_A = arma::zeros(J);
-    arma::vec acc_rho = arma::zeros(K);
-    double acc_sig2 = 0.0;
+
+  double acc_mu = 0.0;
+  arma::vec acc_A = arma::zeros(J);
+  arma::vec acc_rho = arma::zeros(K);
+  double acc_sig2 = 0.0;
 
   // proposal variances
-  double h_mu0 = 2.7225, h_mu = h_mu0;
-  arma::vec h_A0 = (5.6644/(K))*arma::ones(J), h_A = h_A0;
-  arma::vec h_rho0 = (5.6644)*arma::ones(K)/(0.5*rho*nbig*I + 1/sig2rho), h_rho = h_rho0;
-  double h_sig20 = (5.6644/(J)), h_sig2 = h_sig20;
-  arma::mat h_bigU0 = (2.7225/pow(nbig,0.33))*arma::ones(I,K), h_bigU = h_bigU0;
+  //double h_mu0 = 2.7225, h_mu = h_mu0;
+  //arma::vec h_A0 = (5.6644/(K))*arma::ones(J), h_A = h_A0;
+  //arma::vec h_rho0 = (5.6644)*arma::ones(K)/(0.5*rho*nbig*I + 1/sig2rho), h_rho = h_rho0;
+  //double h_sig20 = (5.6644/(J)), h_sig2 = h_sig20;
+  //arma::mat h_bigU0 = (2.7225/pow(nbig,0.33))*arma::ones(I,K), h_bigU = h_bigU0;
+
+  double h_mu0 = 0.5, h_mu = h_mu0;
+  arma::vec h_A0 = 0.5*arma::ones(J), h_A = h_A0;
+  arma::vec h_rho0 = 0.025*arma::ones(K), h_rho = h_rho0;
+  double h_sig20 = 0.5, h_sig2 = h_sig20;
+  arma::mat h_bigU0 = 0.5*arma::ones(I,K), h_bigU = h_bigU0;
 
   //std::cout << "Checkpoint 3" << std::endl;
 
