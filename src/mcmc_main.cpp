@@ -251,6 +251,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       subres_slice = arma::sum(bigres,2);
       curgrad_mu = -(mu - mu0)/sig2mu + bma*(arma::sum(subres_slice,0).t()/sig2);
 
+      canbigres = bigres;
+      canbigquad = bigquad;
       can_mu = mu + 0.5*h_mu*(nHessinv_mu%curgrad_mu) + sqrt(h_mu)*(arma::sqrt(nHessinv_mu)%arma::randn(J));
 
       for(int jind=0;jind<J;jind++){
@@ -400,6 +402,13 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         tempSigeig = arma::fft2(canSigCube);
         canlogdets = arma::accu(arma::log(arma::real(tempSigeig)));
+
+        canbigUquad = bigUquad;
+        canbigUgradpart = bigUgradpart;
+        canbigUstar = bigUstar;
+        canbigres = bigres;
+        canbigquad = bigquad;
+
         for(int iii=0; iii<I; iii++){
         tempfftbigU = arma::fft2(arma::reshape(bigU.slice(kind).col(iii),Next,Mext));
         tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
@@ -494,6 +503,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         canbigres=bigres;
         canbigquad=bigquad;
         canbigUstar = bigUstar;
+        canbigUgradpart = bigUgradpart;
         //canres=res;
         //canquad=quad;
 
