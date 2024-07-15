@@ -322,8 +322,6 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       }
 
       can_A = A;
-      //canres = res;
-      //canquad = quad;
       canbigres = bigres;
       canbigquad = bigquad;
 
@@ -341,8 +339,10 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
         for(int iind=0;iind<I;iind++){
           canbigres.tube(iind,jind) += bigUa.col(iind);
         }
+      }
         canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
+      for(int jind=0;jind<J;jind++){
         for(int kind=0;kind<K;kind++){
           double tempdA = 0.0;
           for(int iind=0;iind<I;iind++){
@@ -351,12 +351,13 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
             tempdA += arma::sum(tempU%nbigtemp);
           }
           cangrad_a(jind,kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA/sig2(jind);
+        }
 
           canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
 
           qprop += -0.5*arma::sum(arma::pow((can_A.row(jind).t() - A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%curgrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
           qcur += -0.5*arma::sum(arma::pow((A.row(jind).t() - can_A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%cangrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
-        }
+
       }
 
       la = canlik_A + qcur - curlik_A - qprop;
