@@ -40,7 +40,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   // Creating variables and intermediary terms
   arma::mat Cs = arma::zeros(I,K);
-  double c1 = sqrt(arma::datum::pi)*bma;
+  double c1 = sqrt(arma::datum::pi)*bma*0.5;
   double temp1=0.0;
   arma::vec temp2=arma::regspace(0,I-1);
   arma::cube res = arma::zeros(I,J,n);
