@@ -182,29 +182,29 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
     nHessinv_mu = 1/((1/sig2mu) + nbig*bma*bma*I/sig2);
   //}
 
-  //nHessinv_sig2 = 1/(1/sigsig2 + 0.5*quad/sig2);
-  nHessinv_sig2 = 1/(1/sigsig2 + 0.5*arma::sum(bigquad,0).t()/sig2);
+  //x//nHessinv_sig2 = 1/(1/sigsig2 + 0.5*quad/sig2);
+  //nHessinv_sig2 = 1/(1/sigsig2 + 0.5*arma::sum(bigquad,0).t()/sig2);
 
   //std::cout << "Checkpoint 2.4" << std::endl;
 
-  //arma::vec dUtU = arma::sum(arma::pow(U,2),0).t();
-  //arma::vec dUtU = arma::zeros(K);
-  //arma::mat dUtU = arma::zeros(K,K);
-  arma::mat dUtU = arma::zeros(K,I);
-  arma::vec tempHessA = arma::zeros(K);
-  //for(int kind=0;kind<K;kind++){
-    //dUtU(kind) = arma::accu(arma::pow(bigUstar.slice(kind),2));
+  //x//arma::vec dUtU = arma::sum(arma::pow(U,2),0).t();
+  //x//arma::vec dUtU = arma::zeros(K);
+  //x//arma::mat dUtU = arma::zeros(K,K);
+  //arma::mat dUtU = arma::zeros(K,I);
+  //arma::vec tempHessA = arma::zeros(K);
+  //x//for(int kind=0;kind<K;kind++){
+    //x//dUtU(kind) = arma::accu(arma::pow(bigUstar.slice(kind),2));
+  //x//}
+  //for(int iind=0; iind < I; iind++){
+    //dUtU.col(iind) = arma::trans(arma::sum(arma::pow(bigUstar.col_as_mat(iind),2),0));
   //}
-  for(int iind=0; iind < I; iind++){
-    dUtU.col(iind) = arma::trans(arma::sum(arma::pow(bigUstar.col_as_mat(iind),2),0));
-  }
-  for(int jind=0;jind<J;jind++){
-    tempHessA = arma::zeros(K,1);
-      for(int iind=0;iind<I;iind++){
-        tempHessA += dUtU.col(iind);
-      }
-      nHessinv_A.col(jind) = 1/(1/sig2A + tempHessA/sig2(jind));
-    }
+  //tempHessA = arma::zeros(K,1);
+  //for(int iind=0;iind<I;iind++){
+    //tempHessA += dUtU.col(iind);
+  //}
+  //for(int jind=0;jind<J;jind++){
+      //nHessinv_A.col(jind) = 1/(1/sig2A + tempHessA/sig2(jind));
+    //}
 
   //std::cout << "Checkpoint 2.5" << std::endl;
 
@@ -311,70 +311,71 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       // Update A
 
       // Block Update
-      //curlik_A = 0;
-      //canlik_A = 0;
-      //qprop=0;
-      //qcur=0;
-      //for(int jind=0;jind<J;jind++){
-        //curlik_A += -0.5*arma::sum(arma::pow(A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(bigquad.col(jind))/sig2(jind);
-        //for(int kind=0;kind<K;kind++){
-          //double tempdA = 0.0;
-          //for(int iind=0;iind<I;iind++){
-            //arma::vec tempU = bigUstar.slice(kind).col(iind);
-            //arma::vec nbigtemp = bigres.tube(iind,jind);
-            //tempdA += arma::sum(tempU%nbigtemp);
-          //}
-          //curgrad_a(jind,kind) = -(A(jind,kind) - A0(jind,kind))/sig2A + tempdA/sig2(jind);
-        //}
-      //}
+      curlik_A = 0.0;
+      canlik_A = 0.0;
+      qprop=0.0;
+      qcur=0.0;
+      for(int jind=0;jind<J;jind++){
+        curlik_A += -0.5*arma::sum(arma::pow(A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(bigquad.col(jind))/sig2(jind);
+        for(int kind=0;kind<K;kind++){
+          double tempdA = 0.0;
+          for(int iind=0;iind<I;iind++){
+            arma::vec tempU = bigUstar.slice(kind).col(iind);
+            arma::vec nbigtemp = bigres.tube(iind,jind);
+            tempdA += arma::sum(tempU%nbigtemp);
+          }
+          curgrad_a(jind,kind) = -(A(jind,kind) - A0(jind,kind))/sig2A + tempdA/sig2(jind);
+        }
+      }
 
-      //can_A = A;
-      //canbigres = bigres;
-      //canbigquad = bigquad;
+      can_A = A;
+      canbigres = bigres;
+      canbigquad = bigquad;
 
-      //for(int jind=0;jind<J;jind++){
-        //tempA = A.row(jind).t() + 0.5*h_Aall*(nHessinv_A.col(jind)%curgrad_a.row(jind).t()) + sqrt(h_Aall)*(arma::sqrt(nHessinv_A.col(jind))%arma::randn(K));
-        //can_A.row(jind) = tempA.t();
-      //}
+      for(int jind=0;jind<J;jind++){
+        tempA = A.row(jind).t() + 0.5*h_Aall*(nHessinv_A.col(jind)%curgrad_a.row(jind).t()) + sqrt(h_Aall)*(arma::sqrt(nHessinv_A.col(jind))%arma::randn(K));
+        can_A.row(jind) = tempA.t();
+      }
 
-      //for(int jind=0;jind<J;jind++){
-        //arma::mat bigUa = arma::zeros(nbig,I);
-        //for(int kind=0;kind<K;kind++){
-          //bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
-        //}
+      for(int jind=0;jind<J;jind++){
+        arma::mat bigUa = arma::zeros(nbig,I);
+        for(int kind=0;kind<K;kind++){
+          bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
+        }
 
-        //for(int iind=0;iind<I;iind++){
-          //canbigres.tube(iind,jind) += bigUa.col(iind);
-        //}
-      //}
-        //canbigquad = arma::sum(arma::pow(canbigres,2),2);
+        for(int iind=0;iind<I;iind++){
+          canbigres.tube(iind,jind) += bigUa.col(iind);
+        }
+      }
+        canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
-      //for(int jind=0;jind<J;jind++){
-        //for(int kind=0;kind<K;kind++){
-          //double tempdA = 0.0;
-          //for(int iind=0;iind<I;iind++){
-            //arma::vec tempU = bigUstar.slice(kind).col(iind);
-            //arma::vec nbigtemp = canbigres.tube(iind,jind);
-            //tempdA += arma::sum(tempU%nbigtemp);
-          //}
-          //cangrad_a(jind,kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA/sig2(jind);
-        //}
+      for(int jind=0;jind<J;jind++){
+        for(int kind=0;kind<K;kind++){
+          double tempdA = 0.0;
+          for(int iind=0;iind<I;iind++){
+            arma::vec tempU = bigUstar.slice(kind).col(iind);
+            arma::vec nbigtemp = canbigres.tube(iind,jind);
+            tempdA += arma::sum(tempU%nbigtemp);
+          }
+          cangrad_a(jind,kind) = -(can_A(jind,kind) - A0(jind,kind))/sig2A + tempdA/sig2(jind);
+        }
+        }
 
-          //canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
+        for(int jind=0;jind<J;jind++){
+          canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
 
-          //qprop += -0.5*arma::sum(arma::pow((can_A.row(jind).t() - A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%curgrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
-          //qcur += -0.5*arma::sum(arma::pow((A.row(jind).t() - can_A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%cangrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
+          qprop += -0.5*arma::sum(arma::pow((can_A.row(jind).t() - A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%curgrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
+          qcur += -0.5*arma::sum(arma::pow((A.row(jind).t() - can_A.row(jind).t() - 0.5*h_Aall*(nHessinv_A.col(jind)%cangrad_a.row(jind).t())),2)/nHessinv_A.col(jind))/h_Aall;
 
-      //}
+      }
 
-      //la = canlik_A + qcur - curlik_A - qprop;
-      //if(log(arma::randu()) < la){
-        //A = can_A;
-        //bigres = canbigres;
-        //bigquad = canbigquad;
-        //acc_Aall += 1.0/nthin;
-      //}
-
+      la = canlik_A + qcur - curlik_A - qprop;
+      if(log(arma::randu()) < la){
+        A = can_A;
+        bigres = canbigres;
+        bigquad = canbigquad;
+        acc_Aall += 1.0/nthin;
+      }
 
       // Individual Update
       //for(int jind=0;jind<J;jind++){
