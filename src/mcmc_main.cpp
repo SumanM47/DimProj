@@ -55,7 +55,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   arma::cube SigCube(Next,Mext,K);
 
-  arma::mat Cmat = arma::zeros(I,I), Cmatchol = arma::zeros(I,I);
+  arma::mat Cmat = arma::zeros(I,I), Cmatchol = arma::zeros(I,I), iCmatchol = arma::zeros(I,I);
 
 
   //std::cout << "Checkpoint 1.1" << std::endl;
@@ -161,7 +161,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube nHessinv_A = arma::ones(K,K,J), nHessinv_A_chol = arma::ones(K,K,J), nHessinv_A_cholinv = arma::ones(K,K,J);
   //arma::mat nHessinv_sig2 = arma::ones(I,J);
   //arma::cube nHessinv_U = arma::ones(nbig,I,K);
-  arma::vec nHessinv_U = arma::ones(K);
+  //x//arma::vec nHessinv_U = arma::ones(K);
+  arma::mat nHessinv_U = arma::ones(I,K);
   //arma::cube arma::mat nHessinv_A = arma::ones(K,K,J), nHessinv_U = arma::ones(Next,Mext,K);
 
   //std::cout << "Checkpoint 2.2" << std::endl;
@@ -222,17 +223,32 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   //std::cout << "Checkpoint 2.5" << std::endl;
 
+  arma::mat dCmatchol = arma::zeros(I,K);
+
   for(int kind=0;kind<K;kind++){
+    arma::mat Cm = arma::toeplitz(Cs.col(kind));
+    bool icholsuc = false;
+    while(icholsuc == false){
+      icholsuc = arma::chol(iCmatchol,Cm);
+      if(icholsuc == false){
+        Cm += arma::eye(I,I)*1e-6;
+        Cs(0,kind) += 1e-6;
+      }
+    }
+    dCmatchol.col(kind) = diagvec(iCmatchol);
+    for(int iind=0;iind<I;iind++){
     //double tempscalebigU = 0;
-    double tempnHessU = diaginv(kind) + arma::sum(arma::pow(A.col(kind),2)/sig2);
+      double tempnHessU = diaginv(kind) + dCmatchol(iind,kind)*dCmatchol(iind,kind)*arma::sum(arma::pow(A.col(kind),2)/sig2);
     //tempnHessU = diaginv(kind)*arma::ones(nbig,I);
     //for(int iind=0; iind<I; iind++){
       //tempnHessU.col(iind) += arma::sum(arma::pow(A.col(kind),2)/sig2);
     //}
-    nHessinv_U(kind) = 1/tempnHessU;
+      nHessinv_U(iind,kind) = 1/tempnHessU;
     //nHessinv_U.slice(kind).submat(0,0,N-1,M-1) = (1/(diaginv(kind)/cs(kind) + tempscalebigU))*arma::ones(N,M);
     //nHessinv_U.slice(kind) = (1/(diaginv(kind)/cs(kind) + tempscalebigU))*arma::ones(Next,Mext);
+    }
   }
+
   //nHessinv_U = arma::ones(K);
 
   //std::cout << "done with Hessians" << std::endl;
@@ -465,6 +481,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       // Update rho
       // Likelihood now includes the residual part since Ustar has C_k in it. Need to update accordingly
 
+      arma::mat can_dCmatchol = dCmatchol;
+
       for(int kind=0;kind<K;kind++){
         curlik_rho = -0.5*pow(log(rho(kind)/rho0(kind)),2)/sig2rho  - 0.5*I*logdets(kind) - 0.5*arma::accu(bigUquad.col(kind)) -0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
 
@@ -502,9 +520,11 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           cholsuc = arma::chol(Cmatchol,Cmat);
           if(cholsuc == false){
             Cmat += arma::eye(I,I)*1e-6;
-            canCs[0] += 1e-6;
+            canCs(0) += 1e-6;
           }
         }
+
+        can_dCmatchol.col(kind) = diagvec(Cmatchol);
 
         canbigUstar.slice(kind) = bigU.slice(kind)*Cmatchol;
         for(int iind=0; iind<I; iind++){
@@ -528,6 +548,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           //bigUgradpart.slice(kind) = canbigUgradpart; // Individual U Update
           bigres=canbigres;
           bigquad=canbigquad;
+          dCmatchol=can_dCmatchol;
           acc_rho(kind) += 1.0/nthin;
         }
 
@@ -538,26 +559,26 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
       // Update sig2
 
       //x//curlik_sig2 = - arma::accu(arma::pow(arma::log(sig2)-musig2,2)/(2*sigsig2)) -0.5*n*arma::accu(arma::log(sig2)) -0.5*arma::accu(quad/sig2);
-      //curlik_sig2 = - arma::sum(arma::pow(arma::log(sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/sig2);
+      curlik_sig2 = - arma::sum(arma::pow(arma::log(sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/sig2);
       //x//curgrad_sig2 = -0.5*n + 0.5*(quad/sig2) - (arma::log(sig2) - musig2)/sigsig2;
-      //curgrad_sig2 = -0.5*nbig*I + 0.5*arma::sum(bigquad,0).t()/sig2 - (arma::log(sig2) - musig2)/sigsig2;
+      curgrad_sig2 = -0.5*nbig*I + 0.5*arma::sum(bigquad,0).t()/sig2 - (arma::log(sig2) - musig2)/sigsig2;
 
-      //can_sig2 = arma::exp(arma::log(sig2) + 0.5*h_sig2*(nHessinv_sig2%curgrad_sig2) + sqrt(h_sig2)*(arma::sqrt(nHessinv_sig2)%arma::randn(J)));
+      can_sig2 = arma::exp(arma::log(sig2) + 0.5*h_sig2*(nHessinv_sig2%curgrad_sig2) + sqrt(h_sig2)*(arma::sqrt(nHessinv_sig2)%arma::randn(J)));
 
 
       //x//canlik_sig2 = - arma::accu(arma::pow(arma::log(can_sig2)-musig2,2)/(2*sigsig2)) -0.5*n*arma::accu(arma::log(can_sig2)) -0.5*arma::accu(quad/can_sig2);
-      //canlik_sig2 = - arma::sum(arma::pow(arma::log(can_sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(can_sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/can_sig2);
+      canlik_sig2 = - arma::sum(arma::pow(arma::log(can_sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(can_sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/can_sig2);
       //x//cangrad_sig2 = -0.5*n + 0.5*(quad/can_sig2) - (arma::log(can_sig2) - musig2)/sigsig2;
-      //cangrad_sig2 = -0.5*nbig*I + 0.5*arma::sum(bigquad,0).t()/can_sig2 - (arma::log(can_sig2) - musig2)/sigsig2;
+      cangrad_sig2 = -0.5*nbig*I + 0.5*arma::sum(bigquad,0).t()/can_sig2 - (arma::log(can_sig2) - musig2)/sigsig2;
 
-      //qprop = -0.5*arma::sum(arma::pow(arma::log(can_sig2) - arma::log(sig2) - 0.5*h_sig2*(nHessinv_sig2%curgrad_sig2),2)/nHessinv_sig2)/h_sig2;
-      //qcur = -0.5*arma::sum(arma::pow(arma::log(sig2) - arma::log(can_sig2) - 0.5*h_sig2*(nHessinv_sig2%cangrad_sig2),2)/nHessinv_sig2)/h_sig2;
+      qprop = -0.5*arma::sum(arma::pow(arma::log(can_sig2) - arma::log(sig2) - 0.5*h_sig2*(nHessinv_sig2%curgrad_sig2),2)/nHessinv_sig2)/h_sig2;
+      qcur = -0.5*arma::sum(arma::pow(arma::log(sig2) - arma::log(can_sig2) - 0.5*h_sig2*(nHessinv_sig2%cangrad_sig2),2)/nHessinv_sig2)/h_sig2;
 
-      //la = canlik_sig2 + qcur - curlik_sig2 - qprop;
-      //if(log(arma::randu()) < la){
-        //sig2 = can_sig2;
-        //acc_sig2 += 1.0/nthin;
-      //}
+      la = canlik_sig2 + qcur - curlik_sig2 - qprop;
+      if(log(arma::randu()) < la){
+        sig2 = can_sig2;
+        acc_sig2 += 1.0/nthin;
+      }
 
       //std::cout << "Checkpoint 7" << std::endl;
 
@@ -569,13 +590,14 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       curlik_bigU = -0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
 
+
       for(int kind=0;kind<K;kind++){
         for(int iind=0;iind<I;iind++){
           arma::mat tempgradpartU = arma::zeros(1,nbig);
           subres_row = arma::sum(bigres,0);
           tempgradpartU = ((A.col(kind)/sig2).t())*subres_row;
 
-          curgrad_bigU.slice(kind).col(iind) = -bigUgradpart.slice(kind).col(iind) + tempgradpartU.t();
+          curgrad_bigU.slice(kind).col(iind) = -bigUgradpart.slice(kind).col(iind) + dCmatchol(iind,kind)*tempgradpartU.t();
         }
       }
 
@@ -588,7 +610,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       for(int kind=0;kind<K;kind++){
         for(int iind=0;iind<I;iind++){
-          can_bigU.slice(kind).col(iind) = bigU.slice(kind).col(iind) + 0.5*h_bigU*(nHessinv_U(kind)*curgrad_bigU.slice(kind).col(iind)) + sqrt(h_bigU)*(sqrt(nHessinv_U(kind))*arma::randn(nbig));
+          can_bigU.slice(kind).col(iind) = bigU.slice(kind).col(iind) + 0.5*h_bigU*(nHessinv_U(iind,kind)*curgrad_bigU.slice(kind).col(iind)) + sqrt(h_bigU)*(sqrt(nHessinv_U(iind,kind))*arma::randn(nbig));
 
           tempSigeig = arma::fft2(SigCube.slice(kind));
           tempfftbigU = arma::fft2(arma::reshape(can_bigU.slice(kind).col(iind),Next,Mext));
@@ -614,7 +636,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           arma::mat tempgradpartU = arma::zeros(1,nbig);
           subres_row = arma::sum(canbigres,0);
           tempgradpartU = ((A.col(kind)/sig2).t())*subres_row;
-          cangrad_bigU.slice(kind).col(iind)= -canbigUgradpart.slice(kind).col(iind) + tempgradpartU.t();
+          cangrad_bigU.slice(kind).col(iind)= -canbigUgradpart.slice(kind).col(iind) + dCmatchol(iind,kind)*tempgradpartU.t();
         }
       }
 
@@ -623,8 +645,8 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       for(int kind=0;kind<K;kind++){
         for(int iind=0;iind<I;iind++){
-          qprop += -0.5*arma::accu(arma::pow(can_bigU.slice(kind).col(iind) - bigU.slice(kind).col(iind) - 0.5*h_bigU*(nHessinv_U(kind)*curgrad_bigU.slice(kind).col(iind)),2)/nHessinv_U(kind))/h_bigU;
-          qcur += -0.5*arma::accu(arma::pow(bigU.slice(kind).col(iind) - can_bigU.slice(kind).col(iind) - 0.5*h_bigU*(nHessinv_U(kind)*cangrad_bigU.slice(kind).col(iind)),2)/nHessinv_U(kind))/h_bigU;
+          qprop += -0.5*arma::accu(arma::pow(can_bigU.slice(kind).col(iind) - bigU.slice(kind).col(iind) - 0.5*h_bigU*(nHessinv_U(iind,kind)*curgrad_bigU.slice(kind).col(iind)),2)/nHessinv_U(iind,kind))/h_bigU;
+          qcur += -0.5*arma::accu(arma::pow(bigU.slice(kind).col(iind) - can_bigU.slice(kind).col(iind) - 0.5*h_bigU*(nHessinv_U(iind,kind)*cangrad_bigU.slice(kind).col(iind)),2)/nHessinv_U(iind,kind))/h_bigU;
         }
       }
 
