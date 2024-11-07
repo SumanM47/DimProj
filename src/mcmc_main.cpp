@@ -655,9 +655,12 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
           canbigUstar.slice(kind) = can_bigU.slice(kind)*arma::chol(arma::toeplitz(Cs.col(kind)));
 
         //std::cout << "Checkpoint 8.2" << std::endl;
-          for(int jind=0;jind<J;jind++){
-            canbigres.tube(iind,jind) += (bigUstar.col_as_mat(iind) - canbigUstar.col_as_mat(iind))*(A.row(jind).t());
-          }
+        }
+      }
+
+      for(int iind=0;iind<I;iind++){
+        for(int jind=0;jind<J;jind++){
+          canbigres.tube(iind,jind) += (bigUstar.col_as_mat(iind) - canbigUstar.col_as_mat(iind))*(A.row(jind).t());
         }
       }
 
