@@ -297,7 +297,7 @@ List Slicesto3D(arma::cube Y, arma::mat S, double bma, int M, int N,
   //arma::mat h_bigU0 = (2.7225/pow(nbig,0.33))*arma::ones(I,K), h_bigU = h_bigU0;
   double h_bigU0 = (2.7225/pow(nbig*I*K,0.33)), h_bigU = h_bigU0;
 
-  double adp = nburn/2;
+  int adp = ceil(nburn/2.0);
 
   //double h_mu0 = 0.5, h_mu = h_mu0;
   //arma::vec h_A0 = 0.5*arma::ones(J), h_A = h_A0;
