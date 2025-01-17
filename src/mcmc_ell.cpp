@@ -236,7 +236,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube nu_bigU = arma::zeros(nbig,I,K);
 
   double theta_mu=0, theta_mu_min=0,theta_mu_max=0;
-  double theta_A=0, theta_A_min=0,theta_A_max=0;
+  arma::vec theta_A=arma::zeros(J), theta_A_min=arma::zeros(J),theta_A_max=arma::zeros(J);
   double theta_sig2=0, theta_sig2_min=0,theta_sig2_max=0;
   arma::mat theta_bigU=arma::zeros(I,K), theta_bigU_min=arma::zeros(I,K),theta_bigU_max=arma::zeros(I,K);
 
@@ -274,7 +274,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       // Set thetas
       theta_mu = 2*arma::datum::pi*arma::randu(), theta_mu_min = theta_mu - 2*arma::datum::pi, theta_mu_max = theta_mu;
-      theta_A = 2*arma::datum::pi*arma::randu(), theta_A_min = theta_A - 2*arma::datum::pi, theta_A_max = theta_A;
+      theta_A = 2*arma::datum::pi*arma::randu(J), theta_A_min = theta_A - 2*arma::datum::pi, theta_A_max = theta_A;
       theta_sig2 = 2*arma::datum::pi*arma::randu(), theta_sig2_min = theta_sig2 - 2*arma::datum::pi, theta_sig2_max = theta_sig2;
       theta_bigU = 2*arma::datum::pi*arma::randu(I,K), theta_bigU_min = theta_bigU - 2*arma::datum::pi, theta_bigU_max = theta_bigU;
 
@@ -330,21 +330,95 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       // Update A
 
-      curlik_A = 0.0;
-      canlik_A = 0.0;
-
-      nu_A = sqrt(sig2A)*arma::randn(J,K);
+      // curlik_A = 0.0;
+      // canlik_A = 0.0;
+      //
+      // nu_A = sqrt(sig2A)*arma::randn(J,K);
+      //
+      // for(int jind=0;jind<J;jind++){
+      //   curlik_A += -0.5*arma::sum(arma::pow(A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(bigquad.col(jind))/sig2(jind);
+      // }
+      //
+      // can_A = A0 + A*cos(theta_A) + nu_A*sin(theta_A);
+      //
+      // canbigres = bigres;
+      // canbigquad = bigquad;
+      //
+      // for(int jind=0;jind<J;jind++){
+      //   arma::mat bigUa = arma::zeros(nbig,I);
+      //   for(int kind=0;kind<K;kind++){
+      //     bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
+      //   }
+      //
+      //   for(int iind=0;iind<I;iind++){
+      //     canbigres.tube(iind,jind) += bigUa.col(iind);
+      //   }
+      // }
+      // canbigquad = arma::sum(arma::pow(canbigres,2),2);
+      //
+      // for(int jind=0;jind<J;jind++){
+      //   canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
+      // }
+      //
+      // la = canlik_A - curlik_A;
+      // lu = log(arma::randu());
+      //
+      // int count_A = 0;
+      //
+      // while(lu >= la){
+      //   if(count_A >= maxCount){break;}
+      //   if(theta_A < 0){theta_A_min = theta_A;}
+      //   if(theta_A >= 0){theta_A_max = theta_A;}
+      //
+      //   theta_A = theta_A_min + (theta_A_max - theta_A_min)*arma::randu();
+      //
+      //   can_A = A0 + A*cos(theta_A) + nu_A*sin(theta_A);
+      //
+      //   canbigres = bigres;
+      //   canbigquad = bigquad;
+      //
+      //   for(int jind=0;jind<J;jind++){
+      //     arma::mat bigUa = arma::zeros(nbig,I);
+      //     for(int kind=0;kind<K;kind++){
+      //       bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
+      //     }
+      //
+      //     for(int iind=0;iind<I;iind++){
+      //       canbigres.tube(iind,jind) += bigUa.col(iind);
+      //     }
+      //   }
+      //   canbigquad = arma::sum(arma::pow(canbigres,2),2);
+      //
+      //   for(int jind=0;jind<J;jind++){
+      //     canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
+      //   }
+      //
+      //   la = canlik_A - curlik_A;
+      //
+      //   count_A += 1;
+      //
+      // }
+      //
+      // if(count_A < maxCount){
+      //   A = can_A;
+      //   bigres = canbigres;
+      //   bigquad = canbigquad;
+      // }
 
       for(int jind=0;jind<J;jind++){
-        curlik_A += -0.5*arma::sum(arma::pow(A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(bigquad.col(jind))/sig2(jind);
-      }
+        curlik_A = 0.0;
+        canlik_A = 0.0;
 
-      can_A = A0 + A*cos(theta_A) + nu_A*sin(theta_A);
+        nu_A = sqrt(sig2A)*arma::randn(K);
 
-      canbigres = bigres;
-      canbigquad = bigquad;
+        curlik_A = -0.5*arma::sum(arma::pow(A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(bigquad.col(jind))/sig2(jind);
 
-      for(int jind=0;jind<J;jind++){
+        can_A = A;
+        can_A.row(jind) = A0.row(jind) + A.row(jind)*cos(theta_A(jind)) + nu_A.t()*sin(theta_A(jind));
+
+        canbigres = bigres;
+        canbigquad = bigquad;
+
         arma::mat bigUa = arma::zeros(nbig,I);
         for(int kind=0;kind<K;kind++){
           bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
@@ -353,31 +427,29 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
         for(int iind=0;iind<I;iind++){
           canbigres.tube(iind,jind) += bigUa.col(iind);
         }
-      }
-      canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
-      for(int jind=0;jind<J;jind++){
-        canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
-      }
+        canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
-      la = canlik_A - curlik_A;
-      lu = log(arma::randu());
+        canlik_A = -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
 
-      int count_A = 0;
+        la = canlik_A - curlik_A;
+        lu = log(arma::randu());
 
-      while(lu >= la){
-        if(count_A >= maxCount){break;}
-        if(theta_A < 0){theta_A_min = theta_A;}
-        if(theta_A >= 0){theta_A_max = theta_A;}
+        int count_A = 0;
 
-        theta_A = theta_A_min + (theta_A_max - theta_A_min)*arma::randu();
+        while(lu >= la){
+          if(count_A >= maxCount){break;}
+          if(theta_A(jind) < 0){theta_A_min(jind) = theta_A(jind);}
+          if(theta_A(jind) >= 0){theta_A_max(jind) = theta_A(jind);}
 
-        can_A = A0 + A*cos(theta_A) + nu_A*sin(theta_A);
+          theta_A(jind) = theta_A_min(jind) + (theta_A_max(jind) - theta_A_min(jind))*arma::randu();
 
-        canbigres = bigres;
-        canbigquad = bigquad;
+          can_A = A;
+          can_A.row(jind) = A0.row(jind) + A.row(jind)*cos(theta_A(jind)) + nu_A.t()*sin(theta_A(jind));
 
-        for(int jind=0;jind<J;jind++){
+          canbigres = bigres;
+          canbigquad = bigquad;
+
           arma::mat bigUa = arma::zeros(nbig,I);
           for(int kind=0;kind<K;kind++){
             bigUa += bigUstar.slice(kind)*(A(jind,kind) - can_A(jind,kind));
@@ -386,24 +458,25 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
           for(int iind=0;iind<I;iind++){
             canbigres.tube(iind,jind) += bigUa.col(iind);
           }
+
+          canbigquad = arma::sum(arma::pow(canbigres,2),2);
+
+          canlik_A = -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
+
+          la = canlik_A - curlik_A;
+          count_A += 1;
+
         }
-        canbigquad = arma::sum(arma::pow(canbigres,2),2);
 
-        for(int jind=0;jind<J;jind++){
-          canlik_A += -0.5*arma::sum(arma::pow(can_A.row(jind).t() - A0.row(jind).t(),2))/sig2A - 0.5*arma::sum(canbigquad.col(jind))/sig2(jind);
+        if(count_A < maxCount){
+          A = can_A;
+          bigres = canbigres;
+          bigquad = canbigquad;
         }
-
-        la = canlik_A - curlik_A;
-
-        count_A += 1;
 
       }
 
-      if(count_A < maxCount){
-        A = can_A;
-        bigres = canbigres;
-        bigquad = canbigquad;
-      }
+
 
       //std::cout << "Checkpoint 5" << std::endl;
 
