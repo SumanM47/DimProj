@@ -556,7 +556,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       curlik_sig2 = - arma::sum(arma::pow(arma::log(sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/sig2);
 
-      can_sig2 = arma::exp(musig2 + sig2*cos(theta_sig2) + nu_sig2*sin(theta_sig2));
+      can_sig2 = arma::exp(musig2 + arma::log(sig2)*cos(theta_sig2) + nu_sig2*sin(theta_sig2));
 
       canlik_sig2 = - arma::sum(arma::pow(arma::log(can_sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(can_sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/can_sig2);
 
@@ -572,7 +572,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         theta_sig2 = theta_sig2_min + (theta_sig2_max - theta_sig2_min)*arma::randu();
 
-        can_sig2 = arma::exp(musig2 + sig2*cos(theta_sig2) + nu_sig2*sin(theta_sig2));
+        can_sig2 = arma::exp(musig2 + arma::log(sig2)*cos(theta_sig2) + nu_sig2*sin(theta_sig2));
 
         canlik_sig2 = - arma::sum(arma::pow(arma::log(can_sig2)-musig2,2)/(2*sigsig2)) -0.5*nbig*I*arma::sum(arma::log(can_sig2)) -0.5*arma::sum(arma::sum(bigquad,0).t()/can_sig2);
 
