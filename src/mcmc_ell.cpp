@@ -33,6 +33,9 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   int nbig = Next*Mext;
 
   arma::mat bigtemp = arma::zeros(Next,Mext);
+  arma::mat lam = arma::zeros(Next,Mext);
+  arma::mat tempfftiid1 = arma::zeros(Next,Mext);
+  arma::mat tempfftiid2 = arma::zeros(Next,Mext);
   bigtemp.submat(0,0,N-1,M-1) = arma::ones(N,M);
   arma::uvec uind = arma::find(arma::vectorise(bigtemp));
 
@@ -78,28 +81,46 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube bigU = arma::zeros(nbig,I,K);
   arma::cube bigUstar = bigU;
   arma::mat bigUquad = arma::zeros(I,K);
-  arma::cube bigUgradpart = arma::zeros(nbig,I,K);
+  //arma::cube bigUgradpart = arma::zeros(nbig,I,K);
   arma::vec logdets = arma::zeros(K);
   arma::mat tempbigU = arma::zeros(Next,Mext);
 
   //std::cout << "Checkpoint 1.2" << std::endl;
 
+  arma::mat dCmatchol = arma::zeros(I,K);
+
   for(int kind=0; kind<K; kind++){
+    arma::mat Cm = arma::toeplitz(Cs.col(kind));
+    bool icholsuc = false;
+    while(icholsuc == false){
+      icholsuc = arma::chol(iCmatchol,Cm);
+      if(icholsuc == false){
+        Cm += arma::eye(I,I)*1e-6;
+        Cs(0,kind) += 1e-6;
+      }
+    }
+    dCmatchol.col(kind) = diagvec(iCmatchol);
     tempSigeig = arma::fft2(SigCube.slice(kind));
-    logdets(kind) = arma::accu(arma::log(arma::real(tempSigeig)));
+    lam = arma::real(tempSigeig);
+    lam.clean(0.0);
+    lam.replace(0,1e-12);
+    logdets(kind) = arma::accu(arma::log(lam));
+    lam = arma::sqrt(lam)*sqrt(nbig);
     for(int iii=0; iii<I; iii++){
-      tempnorm = arma::randn(Next,Mext);
-      tempbigU = arma::real(arma::ifft2(arma::sqrt(tempSigeig)%arma::fft2(tempnorm)));
+      tempfftiid1 = lam%arma::randn(Next,Mext);
+      tempfftiid2 = lam%arma::randn(Next,Mext);
+      tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
+      tempbigU = arma::real(arma::fft2(tempfftiid));
       U.slice(kind).col(iii) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
       tempfftbigU = arma::fft2(tempbigU);
       tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
       bigUquad(iii,kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
       tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU2;
       diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
-      bigUgradpart.slice(kind).col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
+      //bigUgradpart.slice(kind).col(iii) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
       bigU.slice(kind).col(iii) = arma::vectorise(tempbigU);
     }
-    bigUstar.slice(kind) = bigU.slice(kind)*arma::chol(arma::toeplitz(Cs.col(kind)));
+    bigUstar.slice(kind) = bigU.slice(kind)*iCmatchol;
   }
 
   //std::cout << "Checkpoint 1.3" << std::endl;
@@ -160,7 +181,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   double la, canlogdets;
   arma::mat canbigUquad = arma::zeros(I,K); // Joint U update
   arma::mat canSigCube = SigCube.slice(0), canbigquad=bigquad; // Joint U update
-  arma::cube canbigUgradpart = bigUgradpart; // Joint U update
+  //arma::cube canbigUgradpart = bigUgradpart; // Joint U update
   arma::cube canbigres = bigres, can_bigU = bigU, canbigUstar = bigUstar;
 
   //std::cout << "Checkpoint 2.3" << std::endl;
@@ -188,19 +209,9 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
   //std::cout << "Checkpoint 2.5" << std::endl;
 
-  arma::mat dCmatchol = arma::zeros(I,K);
+
 
   for(int kind=0;kind<K;kind++){
-    arma::mat Cm = arma::toeplitz(Cs.col(kind));
-    bool icholsuc = false;
-    while(icholsuc == false){
-      icholsuc = arma::chol(iCmatchol,Cm);
-      if(icholsuc == false){
-        Cm += arma::eye(I,I)*1e-6;
-        Cs(0,kind) += 1e-6;
-      }
-    }
-    dCmatchol.col(kind) = diagvec(iCmatchol);
     for(int iind=0;iind<I;iind++){
       for(int k2ind=0; k2ind<kind; k2ind++){
         for(int i2ind=0; i2ind<=iind; i2ind++){
@@ -594,9 +605,16 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
       for(int kind=0;kind<K;kind++){
         tempSigeig = arma::fft2(SigCube.slice(kind));
+        lam = arma::real(tempSigeig);
+        lam.clean(0.0);
+        lam.replace(0,1e-12);
+        lam = arma::sqrt(lam)*sqrt(nbig);
+        Cmatchol = arma::chol(arma::toeplitz(Cs.col(kind)));
         for(int iind=0;iind<I;iind++){
-          tempfftiid = arma::fft2(arma::randn(Next,Mext));
-          nu_bigU.slice(kind).col(iind) = arma::vectorise(arma::real(arma::ifft2(tempSigeig%tempfftiid)));
+          tempfftiid1 = lam%arma::randn(Next,Mext);
+          tempfftiid2 = lam%arma::randn(Next,Mext);
+          tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
+          nu_bigU.slice(kind).col(iind) = arma::vectorise(arma::real(arma::fft2(tempfftiid)));
 
           curlik_bigU = -0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
 
@@ -612,9 +630,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
           tempfftbigU = arma::fft2(arma::reshape(can_bigU.slice(kind).col(iind),Next,Mext));
           tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
           canbigUquad(iind,kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
-          canbigUgradpart.slice(kind).col(iind) = arma::vectorise(arma::real(arma::ifft2((1/tempSigeig)%tempfftbigU)));
 
-          canbigUstar.slice(kind) = can_bigU.slice(kind)*arma::chol(arma::toeplitz(Cs.col(kind)));
+          canbigUstar.slice(kind) = can_bigU.slice(kind)*Cmatchol;
 
           for(int i2ind=0;i2ind<I;i2ind++){
             for(int j2ind=0;j2ind<J;j2ind++){
@@ -651,7 +668,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
             tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
             canbigUquad(iind,kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
 
-            canbigUstar.slice(kind) = can_bigU.slice(kind)*arma::chol(arma::toeplitz(Cs.col(kind)));
+            canbigUstar.slice(kind) = can_bigU.slice(kind)*Cmatchol;
 
             for(int i2ind=0;i2ind<I;i2ind++){
               for(int j2ind=0;j2ind<J;j2ind++){
