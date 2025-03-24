@@ -105,12 +105,13 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
     lam.clean(0.0);
     lam.replace(0,1e-12);
     logdets(kind) = arma::accu(arma::log(lam));
-    lam = arma::sqrt(lam)*sqrt(nbig);
+    lam = arma::sqrt(lam);
     for(int iii=0; iii<I; iii++){
-      tempfftiid1 = lam%arma::randn(Next,Mext);
-      tempfftiid2 = lam%arma::randn(Next,Mext);
-      tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
-      tempbigU = arma::real(arma::fft2(tempfftiid));
+      //tempfftiid1 = lam%arma::randn(Next,Mext);
+      //tempfftiid2 = lam%arma::randn(Next,Mext);
+      //tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
+      tempfftiid = arma::fft2(arma::randn(Next,Mext));
+      tempbigU = lam%arma::real(tempfftiid);
       U.slice(kind).col(iii) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
       tempfftbigU = arma::fft2(tempbigU);
       tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
@@ -608,13 +609,14 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
         lam = arma::real(tempSigeig);
         lam.clean(0.0);
         lam.replace(0,1e-12);
-        lam = arma::sqrt(lam)*sqrt(nbig);
+        lam = arma::sqrt(lam);
         Cmatchol = arma::chol(arma::toeplitz(Cs.col(kind)));
         for(int iind=0;iind<I;iind++){
-          tempfftiid1 = lam%arma::randn(Next,Mext);
-          tempfftiid2 = lam%arma::randn(Next,Mext);
-          tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
-          nu_bigU.slice(kind).col(iind) = arma::vectorise(arma::real(arma::fft2(tempfftiid)));
+          //tempfftiid1 = lam%arma::randn(Next,Mext);
+          //tempfftiid2 = lam%arma::randn(Next,Mext);
+          //tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
+          tempfftiid = arma::fft2(arma::randn(Next,Mext));
+          nu_bigU.slice(kind).col(iind) = arma::vectorise(lam%arma::real(tempfftiid));
 
           curlik_bigU = -0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
 
