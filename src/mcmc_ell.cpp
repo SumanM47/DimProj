@@ -111,7 +111,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
       //tempfftiid2 = lam%arma::randn(Next,Mext);
       //tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
       tempfftiid = arma::fft2(arma::randn(Next,Mext));
-      tempbigU = lam%arma::real(tempfftiid);
+      tempbigU = lam%arma::real(tempfftiid)/sqrt(nbig);
       U.slice(kind).col(iii) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
       tempfftbigU = arma::fft2(tempbigU);
       tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
@@ -544,8 +544,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         canlik_rho = -0.5*pow(log(can_rho/rho0(kind)),2)/sig2rho - 0.5*I*canlogdets - 0.5*arma::accu(canbigUquad.col(kind)) -0.5*arma::sum(arma::sum(canbigquad,0)/sig2.t());
 
-        // la = canlik_rho - curlik_rho - log(can_rho) + log(rho(kind));
-        la = canlik_rho - curlik_rho;
+         la = canlik_rho - curlik_rho - log(can_rho) + log(rho(kind));
+        //la = canlik_rho - curlik_rho;
         if(log(arma::randu()) < la){
           rho(kind) = can_rho;
           Cs.col(kind) = canCs;
@@ -616,7 +616,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
           //tempfftiid2 = lam%arma::randn(Next,Mext);
           //tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
           tempfftiid = arma::fft2(arma::randn(Next,Mext));
-          nu_bigU.slice(kind).col(iind) = arma::vectorise(lam%arma::real(tempfftiid));
+          nu_bigU.slice(kind).col(iind) = arma::vectorise(lam%arma::real(tempfftiid))/sqrt(nbig);
 
           curlik_bigU = -0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
 
