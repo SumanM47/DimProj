@@ -544,7 +544,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
 
         canlik_rho = -0.5*pow(log(can_rho/rho0(kind)),2)/sig2rho - 0.5*I*canlogdets - 0.5*arma::accu(canbigUquad.col(kind)) -0.5*arma::sum(arma::sum(canbigquad,0)/sig2.t());
 
-         la = canlik_rho - curlik_rho - log(can_rho) + log(rho(kind));
+         la = canlik_rho - curlik_rho;
         //la = canlik_rho - curlik_rho;
         if(log(arma::randu()) < la){
           rho(kind) = can_rho;
