@@ -258,6 +258,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::cube keep_A = arma::zeros(niters,J,K);
   arma::mat keep_rho = arma::zeros(niters,K);
   arma::mat keep_sig2 = arma::zeros(niters,J);
+  arma::vec keep_logL = arma::zeros(niters);
   //double acc_U = 0.0;
   double lu = 0.0;
 
@@ -276,6 +277,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   int adp = ceil(nburn/2.0);
 
   int maxCount = 100;
+
+  double logL = 0.0;
 
   //std::cout << "Checkpoint 3" << std::endl;
 
@@ -698,6 +701,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
         }
       }
 
+      logL = -0.5*nbig*I*arma::sum(arma::log(sig2)) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t()) - 0.5*I*arma::accu(logdets) - 0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::pow(mu-mu0,2))/sig2mu -0.5*arma::accu(arma::pow(A - A0,2))/sig2A - 0.5*arma::sum(pow(log(rho/rho0),2))/sig2rho - arma::sum(arma::pow(arma::log(sig2)-musig2,2)/(2*sigsig2));
+
 
       //std::cout << "Checkpoint 9" << std::endl;
 
@@ -708,6 +713,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
     keep_A.row(i) = A;
     keep_rho.row(i) = rho.t();
     keep_sig2.row(i) = sig2.t();
+    keep_logL(i) = logL;
 
     if(adapt!=0){
       if(i < adp){
@@ -736,6 +742,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
                       Named("A") = keep_A,
                       Named("rho") = keep_rho,
                       Named("sigma2") = keep_sig2,
+                      Named("logPosterior") = keep_logL,
                       Named("acc_rho") = acc_rho/eitr,
                       Named("niters") = niters,
                       Named("nthin") = nthin,
