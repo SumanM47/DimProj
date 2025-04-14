@@ -111,7 +111,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
       tempfftiid2 = lam%arma::randn(Next,Mext);
       tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
       //tempfftiid = arma::fft2(arma::randn(Next,Mext));
-      tempbigU = lam%arma::real(tempfftiid)*2*sqrt(arma::datum::pi);
+      tempbigU = lam%arma::real(tempfftiid)*sqrt(2*arma::datum::pi);
       //tempbigU = arma::real(arma::ifft2(tempfftiid))/nbig;
 
       U.slice(kind).col(iii) = arma::vectorise(tempbigU.submat(0,0,N-1,M-1));
@@ -549,7 +549,7 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
           tempfftiid2 = lam%arma::randn(Next,Mext);
           tempfftiid = arma::cx_mat(tempfftiid1,tempfftiid2);
           //tempfftiid = arma::fft2(arma::randn(Next,Mext));
-          nu_bigU.slice(kind).col(iind) = arma::vectorise(lam%arma::real(tempfftiid))*2*sqrt(arma::datum::pi);
+          nu_bigU.slice(kind).col(iind) = arma::vectorise(lam%arma::real(tempfftiid))*sqrt(2*arma::datum::pi);
           //nu_bigU.slice(kind).col(iind) = arma::vectorise(arma::real(arma::ifft2(tempfftiid)))/nbig;
 
           curlik_bigU = -0.5*arma::accu(bigUquad) - 0.5*arma::sum(arma::sum(bigquad,0)/sig2.t());
