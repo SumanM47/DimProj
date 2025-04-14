@@ -32,8 +32,8 @@
 Slice_to_3D_ell <- function(data,K,
                         inits=NULL,
                         hyperparams=list("mu0" = rep(0,dim(data$Y)[2]), "rho0" = rep(1,K), "A0" = matrix(0,dim(data$Y)[2],K),
-                                         "musig2"=0,"sigsig2"=10,
-                                         "sig2mu"=100,"sig2rho"=100,"sig2A"=100),
+                                         "musig2"=0,"sigsig2"=1,
+                                         "sig2mu"=1,"sig2rho"=1,"sig2A"=1),
                         MCMCparams=list(niters=1.2e4,nthin=10,nburn=2e3,adapt=TRUE)){
 
   ## Unpacking the data
