@@ -51,10 +51,10 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
   arma::mat quad = arma::zeros(I,J);
   arma::mat bigquad = quad;
   arma::cube U = arma::zeros(n,I,K);
-  arma::mat ez = arma::zeros(Next,Mext);
-  ez(0,0) = 1.0;
-  arma::cx_mat tempfftbigU2 = arma::fft2(ez);
-  arma::vec diaginv = arma::ones(K);
+  //arma::mat ez = arma::zeros(Next,Mext);
+  //ez(0,0) = 1.0;
+  //arma::cx_mat tempfftbigU2 = arma::fft2(ez);
+  //arma::vec diaginv = arma::ones(K);
 
   arma::cube SigCube(Next,Mext,K);
 
@@ -118,8 +118,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
       tempfftbigU = arma::fft2(tempbigU);
       tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU;
       bigUquad(iii,kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
-      tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU2;
-      diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
+      //tempbigUquadhalf = (1/arma::sqrt(tempSigeig))%tempfftbigU2;
+      //diaginv(kind) = real(arma::cdot(tempbigUquadhalf,tempbigUquadhalf))/nbig;
       bigU.slice(kind).col(iii) = arma::vectorise(tempbigU);
     }
     bigUstar.slice(kind) = bigU.slice(kind)*iCmatchol;
@@ -436,8 +436,8 @@ List Slicesto3D_ell(arma::cube Y, arma::mat S, double bma, int M, int N,
         can_rho = exp(log(rho(kind)) + sqrt(h_rho(kind))*arma::randn());
 
         canSigCube = arma::exp(-D2ext/(2*can_rho*can_rho));
-        // canCs = c1*((temp2+1)%arma::normcdf((temp2+1)*bma/can_rho) + (temp2-1)%arma::normcdf((temp2-1)*bma/can_rho) - 2*temp2%arma::normcdf(temp2*bma/can_rho)) + (can_rho/sqrt(2.0))*(arma::exp(-0.5*arma::pow((temp2+1)*bma/can_rho,2)) + arma::exp(-0.5*arma::pow((temp2-1)*bma/can_rho,2)) - 2*arma::exp(-0.5*arma::pow((temp2)*bma/can_rho,2)));
-        canCs = c1*((temp2+1)%arma::normcdf((temp2+1)*bma/can_rho) + (temp2-1)%arma::normcdf((temp2-1)*bma/can_rho) - 2*temp2%arma::normcdf(temp2*bma/can_rho)) + (can_rho/(2.0))*(arma::exp(-0.5*arma::pow((temp2+1)*bma/can_rho,2)) + arma::exp(-0.5*arma::pow((temp2-1)*bma/can_rho,2)) - 2*arma::exp(-0.5*arma::pow((temp2)*bma/can_rho,2)));
+        canCs = c1*((temp2+1)%arma::normcdf((temp2+1)*bma/can_rho) + (temp2-1)%arma::normcdf((temp2-1)*bma/can_rho) - 2*temp2%arma::normcdf(temp2*bma/can_rho)) + (can_rho/sqrt(2.0))*(arma::exp(-0.5*arma::pow((temp2+1)*bma/can_rho,2)) + arma::exp(-0.5*arma::pow((temp2-1)*bma/can_rho,2)) - 2*arma::exp(-0.5*arma::pow((temp2)*bma/can_rho,2)));
+        // canCs = c1*((temp2+1)%arma::normcdf((temp2+1)*bma/can_rho) + (temp2-1)%arma::normcdf((temp2-1)*bma/can_rho) - 2*temp2%arma::normcdf(temp2*bma/can_rho)) + (can_rho/(2.0))*(arma::exp(-0.5*arma::pow((temp2+1)*bma/can_rho,2)) + arma::exp(-0.5*arma::pow((temp2-1)*bma/can_rho,2)) - 2*arma::exp(-0.5*arma::pow((temp2)*bma/can_rho,2)));
 
 
         tempSigeig = arma::fft2(canSigCube);
